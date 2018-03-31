@@ -38,6 +38,8 @@
 #
 #
 # TODO:
+# * Determine control IDs (mapping from human-freindly names to act_id)
+#   from server instead of hard-coding them
 # * interactive usage - read in commands from stdin
 # * motion sensor notifications
 # * temperature sensor readings
