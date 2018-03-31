@@ -30,11 +30,11 @@
 #     python3 domo.py status
 #
 # Example crontab:
-# 50 05 * * * python3 /home/mharvan/personal/domotique/domo.py volets kitchen angle 1
-# 50 06 * * * python3 /home/mharvan/personal/domotique/domo.py volets bedroom angle 0.2
-# 55 08 * * * python3 /home/mharvan/personal/domotique/domo.py volets bedroom down
-# 55 08 * 05-09 * python3 /home/mharvan/personal/domotique/domo.py volets streck down
-# 20 13 * 05-09 * python3 /home/mharvan/personal/domotique/domo.py volets kitchen angle 0.35
+# 50 05 * * * python3 /home/mharvan/pycame/domo.py volets kitchen angle 1
+# 50 06 * * * python3 /home/mharvan/pycame/domo.py volets bedroom angle 0.2
+# 55 08 * * * python3 /home/mharvan/pycame/domo.py volets bedroom down
+# 55 08 * 05-09 * python3 /home/mharvan/pycame/domo.py volets streck down
+# 20 13 * 05-09 * python3 /home/mharvan/pycame/domo.py volets kitchen angle 0.35
 #
 #
 # TODO:
