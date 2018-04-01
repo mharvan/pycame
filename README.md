@@ -8,3 +8,5 @@ Features:
 * Blinds: open, close, set an angle
 * Heating: turn off, set specific temperature, turn on automatic mode, turn on jolly mode
 * Scenarios: Activate scenarios pre-programmed in domotique server
+
+Configuration: Hard-coded in pycame.py.
