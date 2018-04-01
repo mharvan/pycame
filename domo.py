@@ -129,7 +129,6 @@ def login():
     except IOError:
         print("Could not write file:", client_id_filename)
 
-
 def gen_cmd(appl_msg):
     global cseq
     cseq += 1
@@ -259,35 +258,64 @@ def get_lights():
     return resp.json()
 
 def get_list():
+    # Get list of features
     features = cmd_name("feature_list_req")["list"]
-    print("Features:", features)
+    print("Features:")
+    for feature in features:
+        print("\t" + feature)
 
-    # Works for: scenarios, openings
-    # TODO: lights, thermoregulations, sicu
+    # Get details for supported features
     if "scenarios" in features:
         feature="scenarios"
         print("Requesting list of {}".format(feature))
         resp = cmd_name("{}_list_req".format(feature))
-        #print('json: ', json.dumps(resp, indent=4))
+        #print('json: ' + json.dumps(resp, indent=4))
+        for scenario in resp["array"]:
+            #print("\tscenario: {}".format(scenario))
+            # Name may be unicode.
+            name = scenario["name"].encode(encoding="ascii", errors="ignore")
+            act_id = scenario["id"]
+            print("\t{} => {}".format(name, act_id))
 
     if "openings" in features:
         feature="openings"
         print("Requesting list of {}".format(feature))
         resp = cmd_name("{}_list_req".format(feature))
-        #print('json: ', json.dumps(resp, indent=4))
+        #print('json: ' + json.dumps(resp, indent=4))
+        for opening in resp["array"]:
+            #print("\topening: {}".format(opening))
+            # Name may be unicode.
+            name = opening["name"].encode(encoding="ascii", errors="ignore")
+            open_act_id = opening["open_act_id"]
+            close_act_id = opening["close_act_id"]
+            print("\t{} => open {}, close {}".format(name, open_act_id, close_act_id))
 
-    if "thermoregulations" in features:
+    if "thermoregulation" in features:
         print("Requesting thermoregulation list")
         resp = get_thermo()
         # act_id, temp
-        print('json: ', json.dumps(resp, indent=4))
+        #print('json: ' + json.dumps(resp, indent=4))
+        act_id = resp["array"][0]["array"][0]["act_id"]
+        temp = int(resp["array"][0]["array"][0]["temp"])
+        print("\tact_id: {}".format(act_id))
+        print("\ttemp: {}".format(temp))
 
     if "lights" in features:
         print("Requesting lights list")
         resp = get_lights()
         # act_id, temp
-        print('json: ', json.dumps(resp, indent=4))
+        #print('json: ' + json.dumps(resp, indent=4))
+        for room in resp["array"][0]["array"]:
+            #print("\troom: {}".format(room))
+            for light in room["array"]:
+                #print("\t\tlight: {}".format(light))
+                # Name may be unicode.
+                name = light["name"].encode(encoding="ascii", errors="ignore")
+                act_id = light["act_id"]
+                #print(u"\t{} => {}".format(name, act_id))
+                print("\t{} => {}".format(name, act_id))
     
+    # TODO: sicu
 
 
 # Modify thermoregulation settings.
