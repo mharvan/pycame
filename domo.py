@@ -54,7 +54,6 @@ import requests
 import sys
 import time
 
-
 # Settings
 url = "http://192.168.0.3/domo/"
 sl_login = "admin"
@@ -90,6 +89,35 @@ scenario_id = {
     "volets_up": 4
 }
 
+layout = {}
+settings = {
+    "layout_names": {
+        "lights": {
+            "Lampe entre": "hall",
+            "Lampe WC": "wc",
+            "Lampe sjour": "living",
+            "Lampe s.a.m.": "sam",
+            "Lampe chambre 1": "bedroom",
+            "Lampe chambre 2": "streck",
+            "Lampe sdbain": "bad",
+            "Miroir sdbain": "bad_mirror",
+            "Lampe vestiaire": "vestiaire",
+            "Lampe terrasse": "terasse"
+        },
+        "blinds": {
+            "Volet sjour": "living",
+            "Volet cuisine": "kitchen",
+            "Volet chambre 1": "bedroom",
+            "Volet chambre 2": "streck"
+        },
+        "scenarios": {
+            "Lampes OFF": "lights_off",
+            "Lampes ON": "lights_on",
+            "volets close": "volets_down",
+            "volets open": "volets_up"
+        }
+    }
+}
 
 # Initialization
 def init():
@@ -316,6 +344,92 @@ def get_list():
                 print("\t{} => {}".format(name, act_id))
     
     # TODO: sicu
+
+def get_layout():
+    global layout
+
+    layout = {}
+    # Get list of features
+    features = cmd_name("feature_list_req")["list"]
+    print("Features:")
+    for feature in features:
+        print("\t" + feature)
+
+    # Get details for supported features
+    if "scenarios" in features:
+        feature="scenarios"
+        layout[feature] = {}
+        print("Requesting list of {}".format(feature))
+        resp = cmd_name("{}_list_req".format(feature))
+        #print('json: ' + json.dumps(resp, indent=4))
+        for scenario in resp["array"]:
+            #print("\tscenario: {}".format(scenario))
+            # Name may be unicode.
+            name = scenario["name"].encode(encoding="ascii", errors="ignore")
+            act_id = scenario["id"]
+            print("\t{} => {}".format(name, act_id))
+            try:
+                layout_name = settings['layout_names'][feature][name]
+            except:
+                layout_name = name
+            layout[feature][layout_name] = act_id
+
+    if "openings" in features:
+        feature="blinds"
+        layout[feature] = {}
+        print("Requesting list of {}".format("openings"))
+        resp = cmd_name("{}_list_req".format("openings"))
+        #print('json: ' + json.dumps(resp, indent=4))
+        for opening in resp["array"]:
+            #print("\topening: {}".format(opening))
+            # Name may be unicode.
+            name = opening["name"].encode(encoding="ascii", errors="ignore")
+            open_act_id = opening["open_act_id"]
+            close_act_id = opening["close_act_id"]
+            print("\t{} => open {}, close {}".format(name, open_act_id, close_act_id))
+            try:
+                layout_name = settings['layout_names'][feature][name]
+            except:
+                layout_name = name
+            layout[feature][layout_name] = open_act_id
+
+    if "thermoregulation" in features:
+        feature="thermoregulation"
+        layout[feature] = {}
+        print("Requesting thermoregulation list")
+        resp = get_thermo()
+        # act_id, temp
+        #print('json: ' + json.dumps(resp, indent=4))
+        act_id = resp["array"][0]["array"][0]["act_id"]
+        temp = int(resp["array"][0]["array"][0]["temp"])
+        print("\tact_id: {}".format(act_id))
+        print("\ttemp: {}".format(temp))
+        layout[feature] = act_id
+
+    if "lights" in features:
+        feature = "lights"
+        layout[feature] = {}
+        print("Requesting lights list")
+        resp = get_lights()
+        # act_id, temp
+        #print('json: ' + json.dumps(resp, indent=4))
+        for room in resp["array"][0]["array"]:
+            #print("\troom: {}".format(room))
+            for light in room["array"]:
+                #print("\t\tlight: {}".format(light))
+                # Name may be unicode.
+                name = light["name"].encode(encoding="ascii", errors="ignore")
+                act_id = light["act_id"]
+                #print(u"\t{} => {}".format(name, act_id))
+                print("\t{} => {}".format(name, act_id))
+                try:
+                    layout_name = settings['layout_names'][feature][name]
+                except:
+                    layout_name = name
+                layout[feature][layout_name] = act_id
+
+    # TODO: sicu
+    print('layout: ' + json.dumps(layout, indent=4))
 
 
 # Modify thermoregulation settings.
@@ -656,6 +770,8 @@ def parse_cmd(cmd):
             print("Supported commands: temp")
     elif (cmd[0] == 'list'):
         get_list()
+    elif (cmd[0] == 'layout'):
+        get_layout()
     else:
         print("Command %s not understood." % cmd[0])
         usage()
