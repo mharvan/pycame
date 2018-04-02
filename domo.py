@@ -73,7 +73,7 @@ light_id = {
     "bedroom": 22,
     "streck": 33,
     "bad": 29,
-    "bath_mirror": 31,
+    "bad_mirror": 31,
     "vestiaire": 41,
     "terasse": 43
 }
@@ -646,6 +646,14 @@ def parse_cmd(cmd):
     elif (cmd[0] == 'scenario'):
         id = scenario_id[cmd[1]]
         scenario(id)
+    elif (cmd[0] == 'get'):
+        if (cmd[1] == 'temp'):
+            resp = get_thermo()
+            temp = int(resp["array"][0]["array"][0]["temp"])
+            print(temp)
+        else:
+            print("Command %s not understood." % cmd[2])
+            print("Supported commands: temp")
     elif (cmd[0] == 'list'):
         get_list()
     else:
