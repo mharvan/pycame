@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Library for domotique system CAME.
 #
@@ -365,7 +365,7 @@ def get_layout():
         for scenario in resp["array"]:
             #print("\tscenario: {}".format(scenario))
             # Name may be unicode.
-            name = scenario["name"].encode(encoding="ascii", errors="ignore")
+            name = scenario["name"].encode(encoding="ascii", errors="ignore").decode("ascii")
             act_id = scenario["id"]
             print("\t{} => {}".format(name, act_id))
             try:
@@ -383,7 +383,7 @@ def get_layout():
         for opening in resp["array"]:
             #print("\topening: {}".format(opening))
             # Name may be unicode.
-            name = opening["name"].encode(encoding="ascii", errors="ignore")
+            name = opening["name"].encode(encoding="ascii", errors="ignore").decode("ascii")
             open_act_id = opening["open_act_id"]
             close_act_id = opening["close_act_id"]
             print("\t{} => open {}, close {}".format(name, open_act_id, close_act_id))
@@ -418,7 +418,7 @@ def get_layout():
             for light in room["array"]:
                 #print("\t\tlight: {}".format(light))
                 # Name may be unicode.
-                name = light["name"].encode(encoding="ascii", errors="ignore")
+                name = light["name"].encode(encoding="ascii", errors="ignore").decode("ascii")
                 act_id = light["act_id"]
                 #print(u"\t{} => {}".format(name, act_id))
                 print("\t{} => {}".format(name, act_id))
