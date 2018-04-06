@@ -11,10 +11,10 @@
 #
 # When called as main program, it includes a command parser (cmd line
 # arguments). Example commands:
-#     python3 domo.py volets kitchen angle 1
-#     python3 domo.py volets bedroom angle 0.2
-#     python3 domo.py volets bedroom down
-#     python3 domo.py volets streck up
+#     python3 domo.py blinds kitchen angle 1
+#     python3 domo.py blinds bedroom angle 0.2
+#     python3 domo.py blinds bedroom down
+#     python3 domo.py blinds streck up
 #     python3 domo.py lights sam on
 #     python3 domo.py lights sam dim 60
 #     python3 domo.py lights living dim 60
@@ -25,16 +25,16 @@
 #     python3 domo.py thermo jolly
 #     python3 domo.py scenario lights_off
 #     python3 domo.py scenario lights_on
-#     python3 domo.py scenario volets_down
-#     python3 domo.py scenario volets_up
+#     python3 domo.py scenario blinds_down
+#     python3 domo.py scenario blinds_up
 #     python3 domo.py status
 #
 # Example crontab:
-# 50 05 * * * python3 /home/mharvan/pycame/domo.py volets kitchen angle 1
-# 50 06 * * * python3 /home/mharvan/pycame/domo.py volets bedroom angle 0.2
-# 55 08 * * * python3 /home/mharvan/pycame/domo.py volets bedroom down
-# 55 08 * 05-09 * python3 /home/mharvan/pycame/domo.py volets streck down
-# 20 13 * 05-09 * python3 /home/mharvan/pycame/domo.py volets kitchen angle 0.35
+# 50 05 * * * python3 /home/mharvan/pycame/domo.py blinds kitchen angle 1
+# 50 06 * * * python3 /home/mharvan/pycame/domo.py blinds bedroom angle 0.2
+# 55 08 * * * python3 /home/mharvan/pycame/domo.py blinds bedroom down
+# 55 08 * 05-09 * python3 /home/mharvan/pycame/domo.py blinds streck down
+# 20 13 * 05-09 * python3 /home/mharvan/pycame/domo.py blinds kitchen angle 0.35
 #
 #
 # TODO:
@@ -59,75 +59,58 @@ url = "http://192.168.0.3/domo/"
 sl_login = "admin"
 sl_pwd = "admin"
 client_id_filename = "/tmp/.client_id"
+settings_filename = "settings.json"
 
 # Global variables (state)
 client_id = ""
 cseq = 0
-
-light_id = {
-    "living": 8,
-    "sam": 11,
-    "entree": 2,
-    "wc": 6,
-    "bedroom": 22,
-    "streck": 33,
-    "bad": 29,
-    "bad_mirror": 31,
-    "vestiaire": 41,
-    "terasse": 43
-}
-volet_id = {
-    "living": 14,
-    "kitchen": 18,
-    "bedroom": 25,
-    "streck": 37
-}
-scenario_id = {
-    "lights_off": 1,
-    "lights_on": 2,
-    "volets_down": 3,
-    "volets_up": 4
-}
-
 layout = {}
-settings = {
-    "layout_names": {
-        "lights": {
-            "Lampe entre": "hall",
-            "Lampe WC": "wc",
-            "Lampe sjour": "living",
-            "Lampe s.a.m.": "sam",
-            "Lampe chambre 1": "bedroom",
-            "Lampe chambre 2": "streck",
-            "Lampe sdbain": "bad",
-            "Miroir sdbain": "bad_mirror",
-            "Lampe vestiaire": "vestiaire",
-            "Lampe terrasse": "terasse"
-        },
-        "blinds": {
-            "Volet sjour": "living",
-            "Volet cuisine": "kitchen",
-            "Volet chambre 1": "bedroom",
-            "Volet chambre 2": "streck"
-        },
-        "scenarios": {
-            "Lampes OFF": "lights_off",
-            "Lampes ON": "lights_on",
-            "volets close": "volets_down",
-            "volets open": "volets_up"
-        }
-    }
-}
+settings = {}
+
+
+# Print to STDERR
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 # Initialization
 def init():
+    global settings
+    global url
+    global sl_login
+    global sl_pwd
+    global client_id_filename
+    # Read in settings from file
+    try:
+        with open(settings_filename, 'r') as infile:
+            settings = json.load(infile)
+        url = settings["url"]
+        sl_login = settings["sl_login"]
+        sl_pwd = settings["sl_pwd"]
+        client_id_filename = settings["client_id_filename"]
+    except IOError:
+        eprint("Could not read settings file:", settings_filename)
+        sys.exit(1)
+    except KeyError:
+        eprint("Mandatory settings missing.")
+        sys.exit(1)
+
     global client_id
     # Read in client_id from file
     try:
-        f = open(client_id_filename, 'rt')
-        client_id = f.read()
+        with open(client_id_filename, 'rt') as infile:
+            client_id = infile.read()
     except IOError:
-        print("Could not read file:", client_id_filename)
+        eprint("Could not read client_id file:", client_id_filename)
+        eprint("Will re-login.")
+
+    global layout
+    # Read in layout from file
+    try:
+        with open(settings["layout_filename"], 'r') as infile:
+            layout = json.load(infile)
+    except IOError:
+        eprint("Could not read layout file:", settings["layout_filename"])
+        eprint("Please initialize it with the option layout.")
 
 
 # Send login request.
@@ -285,66 +268,6 @@ def get_lights():
     #print('json: ', json.dumps(resp.json(), indent=4))
     return resp.json()
 
-def get_list():
-    # Get list of features
-    features = cmd_name("feature_list_req")["list"]
-    print("Features:")
-    for feature in features:
-        print("\t" + feature)
-
-    # Get details for supported features
-    if "scenarios" in features:
-        feature="scenarios"
-        print("Requesting list of {}".format(feature))
-        resp = cmd_name("{}_list_req".format(feature))
-        #print('json: ' + json.dumps(resp, indent=4))
-        for scenario in resp["array"]:
-            #print("\tscenario: {}".format(scenario))
-            # Name may be unicode.
-            name = scenario["name"].encode(encoding="ascii", errors="ignore")
-            act_id = scenario["id"]
-            print("\t{} => {}".format(name, act_id))
-
-    if "openings" in features:
-        feature="openings"
-        print("Requesting list of {}".format(feature))
-        resp = cmd_name("{}_list_req".format(feature))
-        #print('json: ' + json.dumps(resp, indent=4))
-        for opening in resp["array"]:
-            #print("\topening: {}".format(opening))
-            # Name may be unicode.
-            name = opening["name"].encode(encoding="ascii", errors="ignore")
-            open_act_id = opening["open_act_id"]
-            close_act_id = opening["close_act_id"]
-            print("\t{} => open {}, close {}".format(name, open_act_id, close_act_id))
-
-    if "thermoregulation" in features:
-        print("Requesting thermoregulation list")
-        resp = get_thermo()
-        # act_id, temp
-        #print('json: ' + json.dumps(resp, indent=4))
-        act_id = resp["array"][0]["array"][0]["act_id"]
-        temp = int(resp["array"][0]["array"][0]["temp"])
-        print("\tact_id: {}".format(act_id))
-        print("\ttemp: {}".format(temp))
-
-    if "lights" in features:
-        print("Requesting lights list")
-        resp = get_lights()
-        # act_id, temp
-        #print('json: ' + json.dumps(resp, indent=4))
-        for room in resp["array"][0]["array"]:
-            #print("\troom: {}".format(room))
-            for light in room["array"]:
-                #print("\t\tlight: {}".format(light))
-                # Name may be unicode.
-                name = light["name"].encode(encoding="ascii", errors="ignore")
-                act_id = light["act_id"]
-                #print(u"\t{} => {}".format(name, act_id))
-                print("\t{} => {}".format(name, act_id))
-    
-    # TODO: sicu
-
 def get_layout():
     global layout
 
@@ -367,11 +290,11 @@ def get_layout():
             # Name may be unicode.
             name = scenario["name"].encode(encoding="ascii", errors="ignore").decode("ascii")
             act_id = scenario["id"]
-            print("\t{} => {}".format(name, act_id))
             try:
                 layout_name = settings['layout_names'][feature][name]
             except:
                 layout_name = name
+            print("\t{} => {} => {}".format(name, layout_name, act_id))
             layout[feature][layout_name] = act_id
 
     if "openings" in features:
@@ -386,11 +309,12 @@ def get_layout():
             name = opening["name"].encode(encoding="ascii", errors="ignore").decode("ascii")
             open_act_id = opening["open_act_id"]
             close_act_id = opening["close_act_id"]
-            print("\t{} => open {}, close {}".format(name, open_act_id, close_act_id))
             try:
                 layout_name = settings['layout_names'][feature][name]
             except:
                 layout_name = name
+            print("\t{} => {} => open {}, close {}".format(name, layout_name, 
+                                                           open_act_id, close_act_id))
             layout[feature][layout_name] = open_act_id
 
     if "thermoregulation" in features:
@@ -420,17 +344,20 @@ def get_layout():
                 # Name may be unicode.
                 name = light["name"].encode(encoding="ascii", errors="ignore").decode("ascii")
                 act_id = light["act_id"]
-                #print(u"\t{} => {}".format(name, act_id))
-                print("\t{} => {}".format(name, act_id))
                 try:
                     layout_name = settings['layout_names'][feature][name]
                 except:
                     layout_name = name
+                print("\t{} => {} => {}".format(name, layout_name, act_id))
                 layout[feature][layout_name] = act_id
 
     # TODO: sicu
-    print('layout: ' + json.dumps(layout, indent=4))
-
+    #print('layout: ' + json.dumps(layout, indent=4))
+    layout_filename = settings["layout_filename"]
+    with open(layout_filename, 'w') as outfile:
+        json.dump(layout, outfile, indent=4)
+    print()
+    print("Wrote layout to file", layout_filename)
 
 # Modify thermoregulation settings.
 #
@@ -444,8 +371,9 @@ def get_layout():
 #       E.g., 240 for 24 degrees celsia.
 #
 def thermo(mode=2, temp=240):
+    act_id = layout['thermoregulation']
     appl_msg = {
-        "act_id": 13,
+        "act_id": act_id,
         "cmd_name": "thermo_zone_config_req",
         "extended_infos": 0,
         "mode": mode
@@ -495,7 +423,7 @@ def set_dimmers(perc=60):
     lights(5, 1, perc)
     
 
-# Move window blinds (volets) up and down.
+# Move window blinds (blinds) up and down.
 # 
 # "open_act_id":	7,
 # "close_act_id":	8,
@@ -517,7 +445,7 @@ def set_dimmers(perc=60):
 # 0 - stop
 # 1 - up
 # 2 - down
-def volets(act_id, wanted_status):
+def blinds(act_id, wanted_status):
     appl_msg = {
         "act_id": act_id,
         "cmd_name": "opening_move_req",
@@ -525,29 +453,29 @@ def volets(act_id, wanted_status):
     }
     gen_cmd(appl_msg)
 
-def volets_angle(act_id, angle):
+def blinds_angle(act_id, angle):
     # Move down for 1 sec to ensure closed angle
-    volets(act_id, 2)
+    blinds(act_id, 2)
     time.sleep(1)
-    volets(act_id, 0)
+    blinds(act_id, 0)
     # Wait a between commands
     time.sleep(1)
     # Move up to set new angle
-    volets(act_id, 1)
+    blinds(act_id, 1)
     time.sleep(angle)
-    volets(act_id, 0)
-    # Safety fall-back: Unconditionally stop volets movement.
-    # Otherwise, the volets would go fully up if last command did not get through.
+    blinds(act_id, 0)
+    # Safety fall-back: Unconditionally stop blinds movement.
+    # Otherwise, the blinds would go fully up if last command did not get through.
     time.sleep(1)
-    volets(act_id, 0)
+    blinds(act_id, 0)
 
 # Invoke a pre-defined scenario
 #
 # id:
 # 1 - Lampes OFF
 # 2 - Lampes ON",
-# 3 - volets close
-# 4 - volets open
+# 3 - blinds close
+# 4 - blinds open
 def scenario(id):
     appl_msg = {
         "id": id,
@@ -603,24 +531,24 @@ def sicu_events():
     print(json.dumps(resp, indent=4))
 
 
-def test_volets_up_down():
+def test_blinds_up_down():
     for act_id in [9, 10, 9, 10]:
         for status in [0, 1, 0, 2, 0]:
             print(act_id, status)
-            volets(act_id, status)
+            blinds(act_id, status)
             time.sleep(10)
 
-def test_volets_angle():
+def test_blinds_angle():
     act_id = 9
     for angle in [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.6, 0.7, 0.8]:
         print(angle)
-        volets(act_id, 2)
+        blinds(act_id, 2)
         time.sleep(1)
-        volets(act_id, 0)
+        blinds(act_id, 0)
         time.sleep(0.3)
-        volets(act_id, 1)
+        blinds(act_id, 1)
         time.sleep(angle)
-        volets(act_id, 0)
+        blinds(act_id, 0)
         time.sleep(2)
 
 
@@ -646,83 +574,86 @@ def test():
     # time.sleep(5)
     # lights(4,0)
 
-    # # volets: Cuisine
-    # volets(9,2)
+    # # blinds: Cuisine
+    # blinds(9,2)
     # time.sleep(2)
-    # volets(9,0)
+    # blinds(9,0)
     # time.sleep(3)
-    # volets(9,1)
+    # blinds(9,1)
     # time.sleep(0.5)
-    # volets(9,0)
+    # blinds(9,0)
 
-    # # volets: Bedroom
-    # volets(12,1)
+    # # blinds: Bedroom
+    # blinds(12,1)
     # time.sleep(0.7)
-    # volets(12,0)
+    # blinds(12,0)
 
     # 5:50
-    # # volets: Cuisine open
-    # volets(9,1)
+    # # blinds: Cuisine open
+    # blinds(9,1)
     # time.sleep(1)
-    # volets(9,0)
+    # blinds(9,0)
 
     # 6:50
-    # # volets: Bedroom - wake up
-    # volets(12,1)
+    # # blinds: Bedroom - wake up
+    # blinds(12,1)
     # time.sleep(0.2)
-    # volets(12,0)
+    # blinds(12,0)
 
     # 8:55
-    # # volets: Bedroom close
-    # volets(12,2)
+    # # blinds: Bedroom close
+    # blinds(12,2)
 
     # 8:55 (May - Sept)
-    # # volets: Streckraum close
-    # volets(17,2)
+    # # blinds: Streckraum close
+    # blinds(17,2)
 
     # 14:00 (May - Sept)
-    # # volets: Cuisine close
-    # volets(9,2)
+    # # blinds: Cuisine close
+    # blinds(9,2)
     # time.sleep(1)
-    # volets(9,0)
+    # blinds(9,0)
 
     # No movement for 2 hours: turn off all lights (scenario)
 
-    # test_volets_up_down()
-    # test_volets_angle()
-    # test_volets_angle()
+    # test_blinds_up_down()
+    # test_blinds_angle()
+    # test_blinds_angle()
 
     # set_dimmers()
 
 def usage():
-    supported_commands = ['volets', 'lights', 'thermo', 'scenario',
+    supported_commands = ['blinds', 'lights', 'thermo', 'scenario',
                           'status', 'sicu_events']
     print("usage: domo.py command command_options")
     print("commands:", supported_commands)
-    print("lights:", light_id.keys())
-    print("volets:", volet_id.keys())
-    print("scenario:", scenario_id.keys())
+    print("lights:", layout["lights"].keys())
+    print("blinds:", layout["blinds"].keys())
+    print("scenario:", layout["scenarios"].keys())
 
 def parse_cmd(cmd):
-    if (cmd[0] == 'volets'):
-        act_id = volet_id[cmd[1]]
+    if (cmd[0] == 'blinds'):
+        #act_id = volet_id[cmd[1]]
+        act_id = layout["blinds"][cmd[1]]
         if (cmd[2] == 'stop'):
             status = 0
-            volets(act_id, status)
+            blinds(act_id, status)
         elif (cmd[2] == 'up'):
             status = 1
-            volets(act_id, status)
+            blinds(act_id, status)
         elif (cmd[2] == 'down'):
             status = 2
-            volets(act_id, status)
+            blinds(act_id, status)
         elif (cmd[2] == 'angle'):
             angle = float(cmd[3])
-            volets_angle(act_id, angle)
+            blinds_angle(act_id, angle)
         else:
             print("Command %s not understood." % cmd[2])
             print("Supported commands: stop, up, down, angle")
     elif (cmd[0] == 'lights'):
-        act_id = light_id[cmd[1]]
+        #act_id = light_id[cmd[1]]
+        act_id = layout["lights"][cmd[1]]
+        print("act_id:", act_id)
         if (cmd[2] == 'off'):
             status = 0
             lights(act_id, status)
@@ -758,7 +689,8 @@ def parse_cmd(cmd):
     elif (cmd[0] == 'sicu_events'):
         sicu_events()
     elif (cmd[0] == 'scenario'):
-        id = scenario_id[cmd[1]]
+        #id = scenario_id[cmd[1]]
+        id = layout['scenarios'][cmd[1]]
         scenario(id)
     elif (cmd[0] == 'get'):
         if (cmd[1] == 'temp'):
@@ -768,8 +700,6 @@ def parse_cmd(cmd):
         else:
             print("Command %s not understood." % cmd[2])
             print("Supported commands: temp")
-    elif (cmd[0] == 'list'):
-        get_list()
     elif (cmd[0] == 'layout'):
         get_layout()
     else:
@@ -782,29 +712,29 @@ if __name__ == '__main__':
     # login()
 
     # 5:50
-    # # volets: Cuisine open
-    # volets(9,1)
+    # # blinds: Cuisine open
+    # blinds(9,1)
     # time.sleep(1)
-    # volets(9,0)
+    # blinds(9,0)
 
     # 6:50
-    # # volets: Bedroom - wake up
-    # volets(12,1)
+    # # blinds: Bedroom - wake up
+    # blinds(12,1)
     # time.sleep(0.2)
-    # volets(12,0)
+    # blinds(12,0)
 
     # 8:55
-    # # volets: Bedroom close
-    # volets(12,2)
+    # # blinds: Bedroom close
+    # blinds(12,2)
 
     # 8:55 (May - Sept)
-    # # volets: Streckraum close
-    # volets(17,2)
+    # # blinds: Streckraum close
+    # blinds(17,2)
 
     # 14:00 (May - Sept)
-    # # volets: Cuisine close
-    # volets(9,2)
+    # # blinds: Cuisine close
+    # blinds(9,2)
     # time.sleep(1)
-    # volets(9,0)
+    # blinds(9,0)
 
     # No movement for 2 hours: turn off all lights (scenario)

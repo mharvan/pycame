@@ -1,0 +1,27 @@
+{
+    "lights": {
+        "bad": 29,
+        "terasse": 43,
+        "sam": 11,
+        "wc": 6,
+        "vestiaire": 41,
+        "bedroom": 22,
+        "living": 8,
+        "bad_mirror": 31,
+        "hall": 2,
+        "streck": 33
+    },
+    "thermoregulation": 13,
+    "scenarios": {
+        "blinds_down": 3,
+        "lights_on": 2,
+        "blinds_up": 4,
+        "lights_off": 1
+    },
+    "blinds": {
+        "bedroom": 25,
+        "living": 14,
+        "streck": 37,
+        "kitchen": 18
+    }
+}

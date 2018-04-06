@@ -1,0 +1,33 @@
+{
+    "layout_names": {
+        "lights": {
+            "Lampe entre": "hall",
+            "Lampe WC": "wc",
+            "Lampe sjour": "living",
+            "Lampe s.a.m.": "sam",
+            "Lampe chambre 1": "bedroom",
+            "Lampe chambre 2": "streck",
+            "Lampe sdbain": "bad",
+            "Miroir sdbain": "bad_mirror",
+            "Lampe vestiaire": "vestiaire",
+            "Lampe terrasse": "terasse"
+        },
+        "blinds": {
+            "Volet sjour": "living",
+            "Volet cuisine": "kitchen",
+            "Volet chambre 1": "bedroom",
+            "Volet chambre 2": "streck"
+        },
+        "scenarios": {
+            "Lampes OFF": "lights_off",
+            "Lampes ON": "lights_on",
+            "volets close": "blinds_down",
+            "volets open": "blinds_up"
+        }
+    },
+    "url": "http://192.168.0.3/domo/",
+    "sl_login": "admin",
+    "sl_pwd": "admin",
+    "client_id_filename": "/tmp/client_id",
+    "layout_filename": "layout.json"
+}
