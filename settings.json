@@ -1,4 +1,9 @@
 {
+    "url": "http://192.168.0.3/domo/",
+    "sl_login": "admin",
+    "sl_pwd": "admin",
+    "client_id_filename": "/tmp/client_id",
+    "layout_filename": "layout.json",
     "layout_names": {
         "lights": {
             "Lampe entre": "hall",
@@ -24,10 +29,5 @@
             "volets close": "blinds_down",
             "volets open": "blinds_up"
         }
-    },
-    "url": "http://192.168.0.3/domo/",
-    "sl_login": "admin",
-    "sl_pwd": "admin",
-    "client_id_filename": "/tmp/client_id",
-    "layout_filename": "layout.json"
+    }
 }

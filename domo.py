@@ -37,17 +37,6 @@
 # 20 13 * 05-09 * python3 /home/mharvan/pycame/domo.py blinds kitchen angle 0.35
 #
 #
-# TODO:
-# * Determine control IDs (mapping from human-freindly names to act_id)
-#   from server instead of hard-coding them
-# * interactive usage - read in commands from stdin
-# * motion sensor notifications
-# * temperature sensor readings
-# * keepalive
-#
-# * logout
-#   Check traffic when changing accounts.
-#
 
 import json
 import requests
@@ -55,12 +44,14 @@ import os
 import sys
 import time
 
-# Settings
+# File with settings.
+settings_filename = os.path.join(sys.path[0], "settings.json")
+# Settings variables
+# Actual values must be provided in settings file.
 url = "http://192.168.0.3/domo/"
 sl_login = "admin"
 sl_pwd = "admin"
 client_id_filename = "/tmp/.client_id"
-settings_filename = os.path.join(sys.path[0], "settings.json")
 layout_filename = ""
 
 # Global variables (state)
@@ -70,11 +61,12 @@ layout = {}
 settings = {}
 
 
-# Print to STDERR
+# Helper function to print to STDERR
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 # Initialization
+# Read in settings, layout, and client ID.
 def init():
     global settings
     global url
@@ -90,7 +82,6 @@ def init():
         sl_login = settings["sl_login"]
         sl_pwd = settings["sl_pwd"]
         client_id_filename = os.path.join(sys.path[0], settings["client_id_filename"])
-        print("client_id_filename:", client_id_filename)
         layout_filename = os.path.join(sys.path[0], settings["layout_filename"])
     except IOError:
         eprint("Could not read settings file:", settings_filename)
@@ -390,17 +381,7 @@ def thermo(mode=2, temp=240):
 
 # Turn on/off lights and change dimmer setting.
 #
-# act_id
-#  2 - Hall d'entree
-#  3 - Lampe WC
-#  4 - Lampe sejour
-#  5 - Lampe s.a.m.
-# 11 - Lampe chambre 1
-# 16 - Lampe chambre 2
-# 14 - Lampe sdbain
-# 15 - Miroir sdbain
-# 19 - Lampe vestiaire
-# 20 - Lampe terrasse
+# act_id: see layout
 # 
 # wanted_status:
 # 0 - off
@@ -422,33 +403,15 @@ def lights(act_id, wanted_status, perc=None):
     gen_cmd(appl_msg)
 
 
-def set_dimmers(perc=60):
-    lights(4, 1, perc)
-    lights(5, 1, perc)
-    
-
-# Move window blinds (blinds) up and down.
+# Move window blinds (volets) up and down.
 # 
-# "open_act_id":	7,
-# "close_act_id":	8,
-# "name":	"Volet sejour",
-
-# "open_act_id":	9,
-# "close_act_id":	10,
-# "name":	"Volet cuisine",
-
-# "open_act_id":	12,
-# "close_act_id":	13,
-# "name":	"Volet chambre 1",
-# "open_act_id":	17,
-# "close_act_id":	18,
-# "name":	"Volet chambre 2",
-#
+# act_id: see layout
 #
 # wanted_status:
 # 0 - stop
 # 1 - up
 # 2 - down
+#
 def blinds(act_id, wanted_status):
     appl_msg = {
         "act_id": act_id,
@@ -457,12 +420,21 @@ def blinds(act_id, wanted_status):
     }
     gen_cmd(appl_msg)
 
+# Set a specific blinds angle.
+#
+# act_id: see layout
+#
+# angle: time to move blinds up in seconds
+#        Should be a number between 0 and 1.
+# 0: blinds are vertical (no opening)
+# 1: blinds are horizontal
+#
 def blinds_angle(act_id, angle):
     # Move down for 1 sec to ensure closed angle
     blinds(act_id, 2)
     time.sleep(1)
     blinds(act_id, 0)
-    # Wait a between commands
+    # Wait a bit between commands
     time.sleep(1)
     # Move up to set new angle
     blinds(act_id, 1)
@@ -475,11 +447,8 @@ def blinds_angle(act_id, angle):
 
 # Invoke a pre-defined scenario
 #
-# id:
-# 1 - Lampes OFF
-# 2 - Lampes ON",
-# 3 - blinds close
-# 4 - blinds open
+# id: see layout
+#
 def scenario(id):
     appl_msg = {
         "id": id,
@@ -487,6 +456,7 @@ def scenario(id):
     }
     gen_cmd(appl_msg)
 
+# Testing: Status updates to get information from motion sensors.
 def status_update():
     appl_msg = {
         "cmd_name": "status_update_req"
@@ -534,18 +504,13 @@ def sicu_events():
     #results = resp['result']
     print(json.dumps(resp, indent=4))
 
-
-def test_blinds_up_down():
-    for act_id in [9, 10, 9, 10]:
-        for status in [0, 1, 0, 2, 0]:
-            print(act_id, status)
-            blinds(act_id, status)
-            time.sleep(10)
-
-def test_blinds_angle():
-    act_id = 9
+# Test different blinds angles.
+#
+# act_id: see layout
+#
+def blinds_test_angle(act_id):
     for angle in [0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.6, 0.7, 0.8]:
-        print(angle)
+        print("Testing angle", angle)
         blinds(act_id, 2)
         time.sleep(1)
         blinds(act_id, 0)
@@ -555,90 +520,36 @@ def test_blinds_angle():
         blinds(act_id, 0)
         time.sleep(2)
 
-
-def test():
-    pass
-    # # lights: Hall d'entre
-    # lights(2,1)
-    # time.sleep(3)
-    # lights(2,0)
-    # time.sleep(3)
-
-    # # lights: Terrasse
-    # lights(20,1)
-    # time.sleep(5)
-    # lights(20,0)
-
-    # # lights: Living with dimmer
-    # lights(4,1,20)
-    # time.sleep(5)
-    # lights(4,1,80)
-    # time.sleep(5)
-    # lights(4,1,60)
-    # time.sleep(5)
-    # lights(4,0)
-
-    # # blinds: Cuisine
-    # blinds(9,2)
-    # time.sleep(2)
-    # blinds(9,0)
-    # time.sleep(3)
-    # blinds(9,1)
-    # time.sleep(0.5)
-    # blinds(9,0)
-
-    # # blinds: Bedroom
-    # blinds(12,1)
-    # time.sleep(0.7)
-    # blinds(12,0)
-
-    # 5:50
-    # # blinds: Cuisine open
-    # blinds(9,1)
-    # time.sleep(1)
-    # blinds(9,0)
-
-    # 6:50
-    # # blinds: Bedroom - wake up
-    # blinds(12,1)
-    # time.sleep(0.2)
-    # blinds(12,0)
-
-    # 8:55
-    # # blinds: Bedroom close
-    # blinds(12,2)
-
-    # 8:55 (May - Sept)
-    # # blinds: Streckraum close
-    # blinds(17,2)
-
-    # 14:00 (May - Sept)
-    # # blinds: Cuisine close
-    # blinds(9,2)
-    # time.sleep(1)
-    # blinds(9,0)
-
-    # No movement for 2 hours: turn off all lights (scenario)
-
-    # test_blinds_up_down()
-    # test_blinds_angle()
-    # test_blinds_angle()
-
-    # set_dimmers()
-
+# Print usage information and exit with exit code 1.
 def usage():
     supported_commands = ['blinds', 'lights', 'thermo', 'scenario',
-                          'status', 'sicu_events']
+                          'status', 'sicu_events', 'layout', 'get']
+    print()
     print("usage: domo.py command command_options")
-    print("commands:", supported_commands)
-    print("lights:", layout["lights"].keys())
-    print("blinds:", layout["blinds"].keys())
-    print("scenario:", layout["scenarios"].keys())
+    print("commands:", ", ".join(supported_commands))
+    print()
+    print("lights:", ", ".join( layout["lights"].keys() ))
+    print("lights commands: off, on, dim")
+    print()
+    print("blinds:", ", ".join( layout["blinds"].keys() ))
+    print("blinds commands: stop, up, down, angle, test")
+    print()
+    print("scenario:", ", ".join( layout["scenarios"].keys() ))
+    print()
+    print("thermo commands: off, man, auto, joilly")
+    print()
+    print("get commands: temp")
+    sys.exit(1)
 
+# Parse cmd line parameters and call the corresponding function.
 def parse_cmd(cmd):
     if (cmd[0] == 'blinds'):
-        #act_id = volet_id[cmd[1]]
-        act_id = layout["blinds"][cmd[1]]
+        try:
+            act_id = layout["blinds"][cmd[1]]
+        except KeyError:
+            eprint("Error: Blinds name %s not supported." % cmd[1])
+            usage()
+
         if (cmd[2] == 'stop'):
             status = 0
             blinds(act_id, status)
@@ -651,13 +562,17 @@ def parse_cmd(cmd):
         elif (cmd[2] == 'angle'):
             angle = float(cmd[3])
             blinds_angle(act_id, angle)
+        elif (cmd[2] == 'test'):
+            blinds_test_angle(act_id)
         else:
-            print("Command %s not understood." % cmd[2])
-            print("Supported commands: stop, up, down, angle")
+            eprint("Error: Blind command %s not supported." % cmd[2])
+            usage()
     elif (cmd[0] == 'lights'):
-        #act_id = light_id[cmd[1]]
-        act_id = layout["lights"][cmd[1]]
-        print("act_id:", act_id)
+        try:
+            act_id = layout["lights"][cmd[1]]
+        except KeyError:
+            eprint("Error: Light name %s not supported." % cmd[1])
+            usage()
         if (cmd[2] == 'off'):
             status = 0
             lights(act_id, status)
@@ -669,8 +584,9 @@ def parse_cmd(cmd):
             perc = float(cmd[3])
             lights(act_id, status, perc)
         else:
-            print("Command %s not understood." % cmd[2])
-            print("Supported commands: off, on, dim")
+            print("Error: Light command %s not supported." % cmd[2])
+            usage()
+            sys.exit(1)
     elif (cmd[0] == 'thermo'):
         if (cmd[1] == 'off'):
             mode = 0
@@ -686,59 +602,37 @@ def parse_cmd(cmd):
             mode = 3
             thermo(mode)
         else:
-            print("Command %s not understood." % cmd[2])
-            print("Supported commands: off, man, auto, joilly")
+            print("Error: Thermo command %s not supported." % cmd[2])
+            usage()
     elif (cmd[0] == 'status'):
         status_update()
     elif (cmd[0] == 'sicu_events'):
         sicu_events()
     elif (cmd[0] == 'scenario'):
-        #id = scenario_id[cmd[1]]
-        id = layout['scenarios'][cmd[1]]
+        try:
+            id = layout['scenarios'][cmd[1]]
+        except KeyError:
+            eprint("Error: Light name %s not supported." % cmd[1])
+            usage()
         scenario(id)
     elif (cmd[0] == 'get'):
         if (cmd[1] == 'temp'):
             resp = get_thermo()
             temp = int(resp["array"][0]["array"][0]["temp"])
-            print(temp)
+            print("temp:", temp)
+            mode = int(resp["array"][0]["array"][0]["mode"])
+            print("mode:", mode)
         else:
-            print("Command %s not understood." % cmd[2])
-            print("Supported commands: temp")
+            eprint("Error: Get command %s not supported." % cmd[2])
+            usage()
     elif (cmd[0] == 'layout'):
         get_layout()
     else:
-        print("Command %s not understood." % cmd[0])
+        eprint("Error: Command %s not supported." % cmd[0])
         usage()
 
+# Main function
 if __name__ == '__main__':
     init()
     parse_cmd(sys.argv[1:])
     # login()
-
-    # 5:50
-    # # blinds: Cuisine open
-    # blinds(9,1)
-    # time.sleep(1)
-    # blinds(9,0)
-
-    # 6:50
-    # # blinds: Bedroom - wake up
-    # blinds(12,1)
-    # time.sleep(0.2)
-    # blinds(12,0)
-
-    # 8:55
-    # # blinds: Bedroom close
-    # blinds(12,2)
-
-    # 8:55 (May - Sept)
-    # # blinds: Streckraum close
-    # blinds(17,2)
-
-    # 14:00 (May - Sept)
-    # # blinds: Cuisine close
-    # blinds(9,2)
-    # time.sleep(1)
-    # blinds(9,0)
-
-    # No movement for 2 hours: turn off all lights (scenario)
