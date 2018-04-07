@@ -51,6 +51,7 @@
 
 import json
 import requests
+import os
 import sys
 import time
 
@@ -59,7 +60,8 @@ url = "http://192.168.0.3/domo/"
 sl_login = "admin"
 sl_pwd = "admin"
 client_id_filename = "/tmp/.client_id"
-settings_filename = "settings.json"
+settings_filename = os.path.join(sys.path[0], "settings.json")
+layout_filename = ""
 
 # Global variables (state)
 client_id = ""
@@ -79,6 +81,7 @@ def init():
     global sl_login
     global sl_pwd
     global client_id_filename
+    global layout_filename
     # Read in settings from file
     try:
         with open(settings_filename, 'r') as infile:
@@ -86,7 +89,9 @@ def init():
         url = settings["url"]
         sl_login = settings["sl_login"]
         sl_pwd = settings["sl_pwd"]
-        client_id_filename = settings["client_id_filename"]
+        client_id_filename = os.path.join(sys.path[0], settings["client_id_filename"])
+        print("client_id_filename:", client_id_filename)
+        layout_filename = os.path.join(sys.path[0], settings["layout_filename"])
     except IOError:
         eprint("Could not read settings file:", settings_filename)
         sys.exit(1)
@@ -106,10 +111,10 @@ def init():
     global layout
     # Read in layout from file
     try:
-        with open(settings["layout_filename"], 'r') as infile:
+        with open(layout_filename, 'r') as infile:
             layout = json.load(infile)
     except IOError:
-        eprint("Could not read layout file:", settings["layout_filename"])
+        eprint("Could not read layout file:", layout_filename)
         eprint("Please initialize it with the option layout.")
 
 
@@ -353,7 +358,6 @@ def get_layout():
 
     # TODO: sicu
     #print('layout: ' + json.dumps(layout, indent=4))
-    layout_filename = settings["layout_filename"]
     with open(layout_filename, 'w') as outfile:
         json.dump(layout, outfile, indent=4)
     print()
