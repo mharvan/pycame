@@ -12,13 +12,13 @@ Features:
 
 # Quick-start
 
-[] Update `settings.json`.
-[] Run `./domo.py layout` to initialize `layout.json`.
-[] Close blinds in kitchen with `./domo.py blinds kitchen close`.
-[] Turn on lights in the hallway with `./domo.py lights hall open`.
-[] Turn on heating and set temperature to 18 degrees Celsia with `./domo.py thermo man 180`.
-[] Read current temperature with `./domo.py get temp`.
-[] Show available commands with `./domo.py`.
+- [ ] Update `settings.json`.
+- [ ] Run `./domo.py layout` to initialize `layout.json`.
+- [ ] Close blinds in kitchen with `./domo.py blinds kitchen close`.
+- [ ] Turn on lights in the hallway with `./domo.py lights hall open`.
+- [ ] Turn on heating and set temperature to 18 degrees Celsia with `./domo.py thermo man 180`.
+- [ ] Read current temperature with `./domo.py get temp`.
+- [ ] Show available commands with `./domo.py`.
 
 
 # Configuration
