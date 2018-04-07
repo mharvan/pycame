@@ -634,5 +634,7 @@ def parse_cmd(cmd):
 # Main function
 if __name__ == '__main__':
     init()
+    if (len(sys.argv) < 2):
+        usage()
     parse_cmd(sys.argv[1:])
     # login()
