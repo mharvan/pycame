@@ -10,6 +10,13 @@ Features:
 * Scenarios: activate scenarios pre-programmed in domotique server
 
 
+# Installation on a Raspberry Pi with Raspian
+
+Clone this git repository.
+
+Install required packages with `sudo apt install python3-requests`.
+
+
 # Quick-start
 
 - [ ] Update `settings.json`.
