@@ -1,4 +1,4 @@
-# pycame
+# pycame :house:
 Python script to interact with Came domotique system.
 
 Can be used for home automation with a simple crontab.
