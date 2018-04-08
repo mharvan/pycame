@@ -10,7 +10,7 @@ Features:
 * Scenarios: activate scenarios pre-programmed in domotique server
 
 
-# Installation on a Raspberry Pi with Raspian
+## Installation on a Raspberry Pi with Raspian
 
 Install required packages with
 `sudo apt install python3-requests git`.
@@ -19,7 +19,7 @@ Clone this git repository with
 `git clone git@github.com:mharvan/pycame.git`.
 
 
-# Quick-start
+## Quick-start
 
 - [ ] Update `settings.json`.
 - [ ] Run `./domo.py layout` to initialize `layout.json`.
@@ -30,9 +30,9 @@ Clone this git repository with
 - [ ] Show available commands with `./domo.py`.
 
 
-# Configuration
+## Configuration
 
-## Main settings
+### Main settings
 The main configuration is read from the file `settings.json`, residing
 in the same directory as the script `domo.py`.
 This can be changed by modify the variable `settings_filename` in `domo.py`.
@@ -40,7 +40,7 @@ This can be changed by modify the variable `settings_filename` in `domo.py`.
 You must configure the URL of the domotique server and login credentials.
 The sample config file includes default login credentials.
 
-## Layout
+### Layout
 The layout (mapping from names to IDs used by domotique system) is
 stored in the file `layout.json`.
 
@@ -57,7 +57,7 @@ The command `./domo.py layout` should also be used when the domotique
 server was re-programmed and the IDs changed.
 
 
-# Network protocol
+## Network protocol
 
 The domotique server offers communication in the form of
 JSON-formatted messages exchanged over unencrypted HTTP.
@@ -78,7 +78,7 @@ out. To this end, the python script `domo.py` stores the session ID in
 a local file.
 
 
-# Security
+## Security
 
 A possible way to secure the domotique system is to misconfigure the
 network settings of the domotique server and use an invalid default
@@ -89,3 +89,7 @@ within the local network.
 Interaction over the Internet is only possible via another server in
 the local network, such a Raspberry Pi, offering secure protocols like
 SSH.
+
+
+## License
+[MIT license](https://github.com/mharvan/pycame/blob/master/LICENSE)
