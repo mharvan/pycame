@@ -12,9 +12,11 @@ Features:
 
 # Installation on a Raspberry Pi with Raspian
 
-Clone this git repository.
+Install required packages with
+`sudo apt install python3-requests git`.
 
-Install required packages with `sudo apt install python3-requests`.
+Clone this git repository with
+`git clone git@github.com:mharvan/pycame.git`.
 
 
 # Quick-start
