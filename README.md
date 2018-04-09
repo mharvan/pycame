@@ -91,5 +91,11 @@ the local network, such a Raspberry Pi, offering secure protocols like
 SSH.
 
 
+## Scheduling scripts
+
+Convenience scripts for scheduling home automation based on sunrise/sunset are under
+[scheduling](https://github.com/mharvan/pycame/blob/master/scheduling/)
+
+
 ## License
 [MIT license](https://github.com/mharvan/pycame/blob/master/LICENSE)
