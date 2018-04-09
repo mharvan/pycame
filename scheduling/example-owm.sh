@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Settings for OpenWeatherMap API
+# Example settings for OpenWeatherMap API
 #
 
 # Latitude and longitude of location
