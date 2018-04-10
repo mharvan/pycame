@@ -34,9 +34,9 @@ PATH=/home/mharvan/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/
 #0 20 * * * python3 /home/mharvan/pycame/domo.py blinds kitchen down
 
 # Blinds: Open in bedroom if 6:50 is after sunrise.
-#50 06 * 04-09 01-05 python /home/mharvan/pycame/domo.py blinds bedroom angle 0.2
+#50 06 * 04-09 01-05 python3 /home/mharvan/pycame/domo.py blinds bedroom angle 0.2
 50 06 * 03-11 01-05 /home/mharvan/pycame/scheduling/is_before_sunrise.sh || \
-                        python /home/mharvan/pycame/domo.py blinds bedroom angle 0.2
+                        python3 /home/mharvan/pycame/domo.py blinds bedroom angle 0.2
 
 # Blinds: Close during summer to decrease heatup from sunlight.
 55 08 * 07-08 * python3 /home/mharvan/pycame/domo.py blinds streck down
