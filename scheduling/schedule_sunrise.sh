@@ -4,6 +4,9 @@
 # Actions: Open various blinds.
 #
 
+# Fail on errors.
+set -e
+
 # Read in open weather map settings
 SRCDIR=`dirname $0`
 source $SRCDIR/owm.sh
