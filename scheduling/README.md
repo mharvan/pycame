@@ -1,4 +1,4 @@
-# Scheduling Scripts
+# Scheduling Scripts :alarm_clock:
 
 Convenience scripts for scheduling home automation based on
 sunrise/sunset
