@@ -24,4 +24,5 @@ ACTIONTIME=`date '+%H:%M' -d @$ACTIONTIMEUNIX`
 # Schedule action.
 at $ACTIONTIME <<EOF
 /usr/bin/python3 /home/mharvan/pycame/domo.py blinds kitchen down
+/usr/bin/python3 /home/mharvan/pycame/domo.py blinds living down
 EOF
