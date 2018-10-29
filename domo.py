@@ -618,10 +618,16 @@ def parse_cmd(cmd):
     elif (cmd[0] == 'get'):
         if (cmd[1] == 'temp'):
             resp = get_thermo()
-            temp = int(resp["array"][0]["array"][0]["temp"])
+            #print("resp:", json.dumps(resp, indent=4))
+
+            temp = int(resp["array"][0]["array"][0]["temp"]) / 10
             print("temp:", temp)
             mode = int(resp["array"][0]["array"][0]["mode"])
             print("mode:", mode)
+            set_point = int(resp["array"][0]["array"][0]["set_point"]) / 10
+            print("set_point:", set_point)
+            status = int(resp["array"][0]["array"][0]["status"])
+            print("status:", status)
         else:
             eprint("Error: Get command %s not supported." % cmd[2])
             usage()
